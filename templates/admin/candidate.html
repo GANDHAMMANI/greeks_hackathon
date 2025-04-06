@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Candidate Profile: {{ candidate.name }}</h2>
+    <div>
+        <a href="{{ url_for('admin_job_candidates', job_id=candidate.job_id) }}" class="btn btn-secondary me-2">Back to Candidates</a>
+        <div class="btn-group">
+            <a href="{{ url_for('update_candidate_status', candidate_id=candidate.id, job_id=candidate.job_id, status='Shortlisted') }}" class="btn btn-success">Shortlist</a>
+            <a href="{{ url_for('update_candidate_status', candidate_id=candidate.id, job_id=candidate.job_id, status='Rejected') }}" class="btn btn-danger">Reject</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Basic Information -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Contact Information</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ candidate.name }}</p>
+                <p><strong>Email:</strong> {{ candidate.email }}</p>
+                <p><strong>Phone:</strong> {{ candidate.phone }}</p>
+                
+                {% if candidate.linkedin_url %}
+                <p>
+                    <strong>LinkedIn:</strong> 
+                    <a href="{{ candidate.linkedin_url }}" target="_blank">View Profile</a>
+                </p>
+                {% endif %}
+                
+                {% if candidate.github_url %}
+                <p>
+                    <strong>GitHub:</strong> 
+                    <a href="{{ candidate.github_url }}" target="_blank">View Profile</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Match Score -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Match Analysis</h3>
+            </div>
+            <div class="card-body">
+                <h4>Overall Match</h4>
+                <div class="progress mb-3">
+                    <div class="progress-bar 
+                        {% if candidate.match_score > 0.8 %}bg-success
+                        {% elif candidate.match_score > 0.6 %}bg-info
+                        {% elif candidate.match_score > 0.4 %}bg-warning
+                        {% else %}bg-danger{% endif %}" 
+                        role="progressbar" 
+                        style="width: {{ (candidate.match_score * 100)|int }}%" 
+                        aria-valuenow="{{ (candidate.match_score * 100)|int }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100">
+                        {{ (candidate.match_score * 100)|int }}%
+                    </div>
+                </div>
+                
+                <h4>Match Category</h4>
+                <p>
+                    <span class="badge 
+                        {% if candidate.match_category == 'Excellent Match' %}bg-success
+                        {% elif candidate.match_category == 'Good Match' %}bg-info
+                        {% elif candidate.match_category == 'Moderate Match' %}bg-warning
+                        {% else %}bg-danger{% endif %}">
+                        {{ candidate.match_category }}
+                    </span>
+                </p>
+                
+                <h4>Skills Match</h4>
+                <p><strong>Matched Skills:</strong> {{ candidate.matched_skills|join(', ') }}</p>
+                
+                <h4>Other Potential Jobs</h4>
+                <ul class="list-group">
+                    {% for job in candidate.potential_jobs %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ job.title }}
+                        <span class="badge bg-primary rounded-pill">{{ (job.score * 100)|int }}%</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item">No other potential matches</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resume and Experience -->
+    <div class="col-md-8">
+       
+        <!-- Resume Text -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Resume</h3>
+                <div>
+                    <button class="btn btn-sm btn-light" title="Download PDF"><i class="fas fa-download"></i></button>
+                    <button class="btn btn-sm btn-light ms-2" title="Print Resume"><i class="fas fa-print"></i></button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="pdf-document" style="
+                    background-color: white;
+                    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+                    padding: 35px;
+                    font-family: 'Calibri', 'Segoe UI', sans-serif;
+                    border-radius: 0 0 0.25rem 0.25rem;
+                    min-height: 700px;
+                    position: relative;
+                    overflow-y: auto;
+                    max-height: 700px;
+                    line-height: 1.5;
+                    color: #333;
+                ">
+                    <!-- Don't modify this directly - it will be processed by the script below -->
+                    <div id="resume-content" class="resume-content">{{ candidate.resume_text }}</div>
+                    
+                    <!-- PDF footer with page number -->
+                    <div style="position: absolute; bottom: 15px; right: 20px; font-size: 0.8rem; color: #999; font-family: 'Calibri', 'Segoe UI', sans-serif;">
+                        Page 1
+                    </div>
+                    
+                    <!-- Subtle watermark effect -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); 
+                        font-size: 9rem; opacity: 0.02; pointer-events: none; z-index: 1; color: #000; white-space: nowrap; 
+                        font-family: 'Arial', sans-serif; font-weight: bold;">
+                        RESUME
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<style>
+    /* Import professional fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap');
+    
+    /* Base resume styles */
+    .resume-content {
+        font-family: 'Lato', 'Calibri', 'Segoe UI', sans-serif;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #333;
+        white-space: pre-wrap;
+    }
+    
+    /* Header styling */
+    .resume-name {
+        font-family: 'Roboto', 'Arial', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #283747;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+    
+    .resume-contact {
+        font-family: 'Lato', 'Calibri', sans-serif;
+        font-size: 0.85rem;
+        color: #5D6D7E;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .resume-contact a {
+        color: #2980B9;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    /* Section headers */
+    .section-header {
+        font-family: 'Roboto', 'Arial', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2C3E50;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 1.8rem;
+        margin-bottom: 0.7rem;
+        border-bottom: 1px solid #EBF0F5;
+        padding-bottom: 0.3rem;
+    }
+    
+    /* Institution/Company names */
+    .institution {
+        font-weight: 600;
+        color: #2C3E50;
+    }
+    
+    /* Dates */
+    .date {
+        font-weight: 400;
+        color: #7F8C8D;
+        font-style: italic;
+    }
+    
+    /* Job titles / Degree */
+    .title {
+        font-weight: 500;
+        color: #34495E;
+    }
+    
+    /* GPA and metrics */
+    .metric {
+        font-weight: 700;
+    }
+    
+    /* Skills section */
+    .skill-category {
+        font-weight: 600;
+        color: #2C3E50;
+    }
+    
+    .skill-item {
+        font-weight: 500;
+        color: #3498DB;
+    }
+    
+    /* Links */
+    .resume-link {
+        color: #3498DB;
+        text-decoration: none;
+    }
+    
+    /* List items */
+    .resume-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Project titles */
+    .project-title {
+        font-weight: 600;
+        color: #2980B9;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const resumeContent = document.getElementById('resume-content');
+        if (!resumeContent) return;
+        
+        let content = resumeContent.innerText;
+        
+        // Pattern matching for common resume sections
+        const sectionHeaders = [
+            'EDUCATION', 'EXPERIENCE', 'WORK EXPERIENCE', 'SKILLS', 
+            'PROJECTS', 'CERTIFICATIONS', 'ACHIEVEMENTS', 'PUBLICATIONS',
+            'LANGUAGES', 'INTERESTS', 'REFERENCES', 'SUMMARY', 'OBJECTIVE',
+            'AWARDS', 'PROFESSIONAL SUMMARY', 'TECHNICAL SKILLS'
+        ];
+        
+        // Process the content to identify the specific structure of this resume
+        let formattedHTML = '';
+        
+        // Extract header section (name and contact info)
+        const headerLines = content.split('\n').slice(0, 2);
+        if (headerLines.length >= 2) {
+            formattedHTML += `<div class="resume-name">${headerLines[0]}</div>`;
+            formattedHTML += `<div class="resume-contact">${headerLines[1]}</div>`;
+        }
+        
+        // Process the rest of the content
+        let restOfContent = content.split('\n').slice(2).join('\n');
+        
+        // Replace section headers with styled versions
+        sectionHeaders.forEach(header => {
+            const regex = new RegExp(`\\*\\*${header}\\*\\*`, 'g');
+            restOfContent = restOfContent.replace(regex, `<div class="section-header">${header}</div>`);
+        });
+        
+        // Process bold text (anything between ** **)
+        restOfContent = restOfContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Process institutions (typically followed by dates)
+        restOfContent = restOfContent.replace(/\b([A-Z][A-Za-z\s&.,'"-]{2,})\s*\|\s*([^|]+)/g, 
+            '<span class="institution">$1</span> | <span class="date">$2</span>');
+        
+        // Process GPA and metrics
+        restOfContent = restOfContent.replace(/\b(GPA|Grade|Score):\s*([0-9.]+)/g, 
+            '<span class="metric">$1: $2</span>');
+        
+        // Process project titles
+        restOfContent = restOfContent.replace(/\b([A-Z][a-z]*(\s+[A-Z][a-z]+)+)\s+\*/g, 
+            '<span class="project-title">$1</span> *');
+        
+        // Process links
+        restOfContent = restOfContent.replace(/(https?:\/\/\S+)/g, '<a href="$1" class="resume-link" target="_blank">$1</a>');
+        
+        // Process bullet points
+        restOfContent = restOfContent.replace(/•\s+(.*?)(?=\n|$)/g, '<div class="resume-item">• $1</div>');
+        
+        // Format skill sections
+        restOfContent = restOfContent.replace(/([A-Za-z]+)\s+\*\*Languages\*\*\s+Known\s*:\s*\*\*([^*]+)\*\*/g, 
+            '<div><span class="skill-category">$1 Languages</span>: <span class="skill-item">$2</span></div>');
+        
+        // Format other skill items
+        restOfContent = restOfContent.replace(/([A-Za-z]+(\s+[A-Za-z]+)*):\s*\*\*([^*]+)\*\*/g, 
+            '<div><span class="skill-category">$1</span>: <span class="skill-item">$3</span></div>');
+        
+        // Add the rest of the processed content
+        formattedHTML += restOfContent;
+        
+        // Set the formatted HTML content
+        resumeContent.innerHTML = formattedHTML;
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

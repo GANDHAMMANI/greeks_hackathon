@@ -1,0 +1,8 @@
+Flask
+mysql-connector-python
+neo4j
+python-dotenv
+Werkzeug
+PyPDF2
+spacy
+requests

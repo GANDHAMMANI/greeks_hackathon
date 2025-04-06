@@ -1,0 +1,36 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Recruitment System - Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Welcome to the Recruitment System</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">Find the perfect job match for your skills and experience.</p>
+                
+                <h3>Available Positions</h3>
+                <div class="list-group mt-3">
+                    {% for job in jobs %}
+                    <a href="{{ url_for('apply', job_id=job.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ job['job title'] }}</h5>
+                        </div>
+                        <p class="mb-1">Click to apply for this position</p>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No job positions available at the moment.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

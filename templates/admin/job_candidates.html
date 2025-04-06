@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidates for {{ job['job title'] }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Candidates for: {{ job['job title'] }}</h2>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Applicants</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Application Date</th>
+                        <th>Status</th>
+                        <th>Match Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in candidates %}
+                    <tr>
+                        <td>{{ candidate.name }}</td>
+                        <td>{{ candidate.email }}</td>
+                        <td>{{ candidate.application_date }}</td>
+                        <td>
+                            <span class="badge {% if candidate.application_status == 'Shortlisted' %}bg-success{% elif candidate.application_status == 'Rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ candidate.application_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar 
+                                    {% if candidate.match_score > 0.8 %}bg-success
+                                    {% elif candidate.match_score > 0.6 %}bg-info
+                                    {% elif candidate.match_score > 0.4 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ (candidate.match_score * 100)|int }}%" 
+                                    aria-valuenow="{{ (candidate.match_score * 100)|int }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ (candidate.match_score * 100)|int }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_candidate_details', candidate_id=candidate.candidate_id) }}" class="btn btn-sm btn-primary">View Details</a>
+                            <a href="{{ url_for('evaluate_candidate', candidate_id=candidate.candidate_id, job_id=job.id) }}" class="btn btn-sm btn-info">LLM Evaluate</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No candidates have applied for this position yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Admin Dashboard</h2>
+        <p class="text-muted">Overview of recruitment activity</p>
+    </div>
+</div>
+
+<!-- Stats cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Jobs</h5>
+                <h2 class="display-4">{{ jobs|length }}</h2>
+                <p class="card-text">Open positions</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Applicants</h5>
+                <h2 class="display-4">{{ total_applicants }}</h2>
+                <p class="card-text">Across all positions</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Average Match</h5>
+                <h2 class="display-4">{{ (avg_match_score * 100)|int }}%</h2>
+                <p class="card-text">Quality of applications</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <h5 class="card-title">New Today</h5>
+                <h2 class="display-4">{{ new_applications }}</h2>
+                <p class="card-text">Applications received today</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Applications by Job</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="applicationsChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Match Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="matchDistributionChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job positions table -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Job Positions</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Job Title</th>
+                        <th>Applicants</th>
+                        <th>Match Quality</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.id }}</td>
+                        <td>{{ job['job title'] }}</td>
+                        <td>
+                            <span class="badge bg-primary">{{ job.applicant_count }}</span>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar 
+                                    {% if job.avg_match > 0.8 %}bg-success
+                                    {% elif job.avg_match > 0.6 %}bg-info
+                                    {% elif job.avg_match > 0.4 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ (job.avg_match * 100)|int }}%" 
+                                    aria-valuenow="{{ (job.avg_match * 100)|int }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ (job.avg_match * 100)|int }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_job_candidates', job_id=job.id) }}" class="btn btn-sm btn-primary">View Candidates</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No jobs available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent applications -->
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Recent Applications</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Job Position</th>
+                        <th>Applied On</th>
+                        <th>Match Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                    <tr>
+                        <td>{{ app.name }}</td>
+                        <td>{{ app.job_title }}</td>
+                        <td>{{ app.date }}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar 
+                                    {% if app.match_score > 0.8 %}bg-success
+                                    {% elif app.match_score > 0.6 %}bg-info
+                                    {% elif app.match_score > 0.4 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ (app.match_score * 100)|int }}%" 
+                                    aria-valuenow="{{ (app.match_score * 100)|int }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ (app.match_score * 100)|int }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_candidate_details', candidate_id=app.candidate_id) }}" class="btn btn-sm btn-info">View Profile</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No recent applications</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Applications by job chart
+const applicationsCtx = document.getElementById('applicationsChart').getContext('2d');
+const applicationsChart = new Chart(applicationsCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ job_titles|tojson }},
+        datasets: [{
+            label: 'Number of Applicants',
+            data: {{ applicant_counts|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Match distribution chart
+const matchCtx = document.getElementById('matchDistributionChart').getContext('2d');
+const matchChart = new Chart(matchCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Excellent Match (>80%)', 'Good Match (60-80%)', 'Moderate Match (40-60%)', 'Low Match (<40%)'],
+        datasets: [{
+            data: {{ match_distribution|tojson }},
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',  // success - green
+                'rgba(23, 162, 184, 0.7)',  // info - cyan
+                'rgba(255, 193, 7, 0.7)',   // warning - yellow
+                'rgba(220, 53, 69, 0.7)'    // danger - red
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(23, 162, 184, 1)',
+                'rgba(255, 193, 7, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

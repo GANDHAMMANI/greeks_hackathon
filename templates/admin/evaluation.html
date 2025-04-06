@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Evaluation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>LLM Evaluation Results</h2>
+        <a href="{{ url_for('admin_job_candidates', job_id=job.id) }}" class="btn btn-secondary">Back to Candidates</a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Evaluation Summary</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Candidate:</strong> {{ candidate.name }}</p>
+            <p><strong>Job:</strong> {{ job.title }}</p>
+            
+            <h4>Match Score</h4>
+            <div class="progress mb-3">
+                <div class="progress-bar 
+                    {% if evaluation.match_score > 0.8 %}bg-success
+                    {% elif evaluation.match_score > 0.6 %}bg-info
+                    {% elif evaluation.match_score > 0.4 %}bg-warning
+                    {% else %}bg-danger{% endif %}" 
+                    role="progressbar" 
+                    style="width: {{ (evaluation.match_score * 100)|int }}%" 
+                    aria-valuenow="{{ (evaluation.match_score * 100)|int }}" 
+                    aria-valuemin="0" 
+                    aria-valuemax="100">
+                    {{ (evaluation.match_score * 100)|int }}%
+                </div>
+            </div>
+            
+            <h4>Match Category</h4>
+            <p>
+                <span class="badge 
+                    {% if evaluation.match_category == 'Excellent Match' %}bg-success
+                    {% elif evaluation.match_category == 'Good Match' %}bg-info
+                    {% elif evaluation.match_category == 'Moderate Match' %}bg-warning
+                    {% else %}bg-danger{% endif %}">
+                    {{ evaluation.match_category }}
+                </span>
+            </p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Strengths</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for strength in evaluation.strengths %}
+                        <li class="list-group-item">{{ strength }}</li>
+                        {% else %}
+                        <li class="list-group-item">No strengths identified</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">Gaps</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for gap in evaluation.gaps %}
+                        <li class="list-group-item">{{ gap }}</li>
+                        {% else %}
+                        <li class="list-group-item">No gaps identified</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Recommendations</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for rec in evaluation.recommendations %}
+                        <li class="list-group-item">{{ rec }}</li>
+                        {% else %}
+                        <li class="list-group-item">No recommendations provided</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if evaluation.error %}
+    <div class="alert alert-danger">
+        <h4>Error during evaluation:</h4>
+        <p>{{ evaluation.error }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
