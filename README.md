@@ -51,7 +51,11 @@ Our platform uses a sophisticated two-tier matching system:
 3. **Categorization**: Candidates are classified into match categories (Excellent, Good, Moderate, Low)
 
 ## Video Demo
-![SmartRecruit Dashboard](https://placeholder-for-dashboard-screenshot.png)
+
+
+https://github.com/user-attachments/assets/73b5bd95-6ce1-42f5-9f09-ae7077f30c7d
+
+
 ## 🖥️ Installation & Setup
 
 ### Prerequisites
